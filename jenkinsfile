@@ -1,0 +1,69 @@
+pipeline
+              {
+                             agent any
+                                           stages
+                                           {
+                                                                        stage('compile-stage')
+                                                                        {
+                                                                          steps   
+                                                                          {           
+                                                                                      withMaven(maven:'Maven_3_3_9')
+                                                                                      {
+                                                                                                     sh 'mvn -f pom.xml clean compile'
+                                                                                      }
+                                                                           }          
+                                                                        }             
+                                                                        stage('Testing-stage')
+                                                                        {
+                                                                          steps
+                                                                          {
+                                                                                      withMaven(maven:'Maven_3_3_9')
+                                                                                      {
+                                                                                                     sh 'mvn -f pom.xml test'
+                                                                                      }
+                                                                           }          
+                                                                        } 
+                                                                        /* stage('SonarQube analysis') 
+                                                                         {
+                                           steps 
+                                           {
+                                                          withSonarQubeEnv('mysonar') 
+                                                          {
+                                                                        sh 'mvn -f pom.xml org.sonarsource.scanner.maven:sonar-maven-plugin:3.2:sonar'
+                                                           }
+                                                          }
+                                           }*/
+                                                          
+                                                                        stage('Build-stage')
+                                                                        {
+                                                                           steps
+                                                                           {
+                                                                                      withMaven(maven:'Maven_3_3_9')
+                                                                                      {
+                                                                                                     sh 'mvn -f pom.xml package'
+                                                                                      }
+                                                                           } 
+                                                                        } 
+                                                                        stage('copy-stage')
+                                                                        {
+                                                                          steps
+                                                                             {                                                                                
+                                                                                  sh 'scp /var/lib/jenkins/workspace/Restaurant-Search-Service/target/restaurant-search-service.jar demovm@52.172.129.182:/home/demovm/'                                                                                
+                                                                              }
+
+                                                                        }
+                                                                        stage('run-stage')
+                                                                        {
+                                                                            steps
+                                                                            {                                                                                
+                                                                                  sh 'ssh -t -t demovm@52.172.129.182'
+                                                                                  sh 'cd /home/demovm'
+                                                                                  sh 'kill 5665'
+                                                                                  sh 'java -jar restaurant-search-service.jar'
+                                                                                  sh 'exit'
+                                                                                
+                                                                              }
+                                                                        }
+                             
+                                           } 
+              }                        
